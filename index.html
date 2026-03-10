@@ -75,9 +75,18 @@
   .intro-sub {
     font-size: 1.05rem;
     color: var(--muted);
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
     max-width: 480px;
     line-height: 1.6;
+  }
+
+  .intro-disclaimer {
+    font-size: 0.82rem;
+    color: #aaa;
+    max-width: 480px;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    font-style: italic;
   }
 
   .intro-meta {
@@ -514,27 +523,7 @@
     color: var(--blue);
   }
 
-  /* Error */
-  #screen-error {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    text-align: center;
-    gap: 1rem;
-  }
-  #screen-error h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.5rem;
-    color: var(--blue);
-  }
-  #screen-error p {
-    color: var(--muted);
-    max-width: 420px;
-    line-height: 1.6;
-  }
+
   code {
     background: rgba(0,0,0,0.06);
     padding: 0.2em 0.5em;
@@ -561,6 +550,8 @@
     <div class="loading-text">Henter afstemninger…</div>
   </div>
 
+
+
   <!-- INTRO -->
   <div id="screen-intro" class="hidden">
     <div class="logo-mark">
@@ -568,6 +559,7 @@
     </div>
     <h1>Folketing&shy;valgtesten</h1>
     <p class="intro-sub">Stem ja eller nej til rigtige lovforslag fra Folketinget — og find ud af, hvilke partier du er mest enig med.</p>
+    <p class="intro-disclaimer">Denne test bygger på faktiske afstemninger i Folketinget. Ikke partiernes egne udmeldinger. Det betyder, at testen måler dine svar op mod hvad partierne rent faktisk har stemt for at gøre til lov. Afstemninger, hvor alle eller næsten alle partier var enige, er sorteret fra, da de i mindre grad illustrerer de politiske skillelinjer.</p>
     <div class="intro-meta">
       <span class="meta-pill" id="intro-count">— lovforslag</span>
       <span class="meta-pill">Seneste 3 år</span>
@@ -678,7 +670,8 @@ async function boot() {
 
     show('screen-intro');
   } catch (e) {
-    show('screen-error');
+    console.error('Kunne ikke hente data:', e);
+    document.getElementById('screen-loading').innerHTML = '<p style="color:#c0392b;padding:2rem">Kunne ikke hente <code>votes.json</code>. Start en lokal server: <code>python3 -m http.server 8000</code></p>';
   }
 }
 
@@ -891,43 +884,41 @@ function answerToNum(answer) {
   return 0;
 }
 
-function cosineSimilarity(vecA, vecB) {
-  let dot = 0, magA = 0, magB = 0;
-  for (let i = 0; i < vecA.length; i++) {
-    dot += vecA[i] * vecB[i];
-    magA += vecA[i] * vecA[i];
-    magB += vecB[i] * vecB[i];
-  }
-  if (magA === 0 || magB === 0) return 0;
-  return dot / (Math.sqrt(magA) * Math.sqrt(magB));
-}
-
 function computeMatches() {
-  const answeredVotes = quizVotes.filter(v => userAnswers[v.id] !== 'ved-ikke' && userAnswers[v.id] !== undefined);
+  // Kun afstemninger hvor brugeren tog stilling (ja eller nej)
+  const answeredVotes = quizVotes.filter(v =>
+    userAnswers[v.id] === 'ja' || userAnswers[v.id] === 'nej'
+  );
 
   if (answeredVotes.length === 0) return { parties: [] };
 
-  const userVec = answeredVotes.map(v => answerToNum(userAnswers[v.id]));
-
-  // Parti-matching via partiStemmer (nøgle = partinavn)
+  // Find alle partier der optræder i de besvarede afstemninger
   const partyNames = new Set();
   answeredVotes.forEach(v => Object.keys(v.partiStemmer || {}).forEach(n => partyNames.add(n)));
 
   const partyScores = {};
   partyNames.forEach(navn => {
-    const vec = answeredVotes.map(v => {
-      const stemme = v.partiStemmer?.[navn];
-      return stemme ? stemmeToNum(stemme) : 0;
+    let enige = 0;
+    let faelles = 0;
+
+    answeredVotes.forEach(v => {
+      const partiStemme = v.partiStemmer?.[navn];
+      if (!partiStemme || partiStemme === 'Hverken') return;
+
+      faelles++;
+      const brugerJa = userAnswers[v.id] === 'ja';
+      const partiJa = partiStemme === 'Ja';
+      if (brugerJa === partiJa) enige++;
     });
-    const coverage = vec.filter(x => x !== 0).length;
-    if (coverage < 3) return;
-    partyScores[navn] = cosineSimilarity(userVec, vec);
+
+    if (faelles < 3) return;
+    partyScores[navn] = { pct: Math.round((enige / faelles) * 100), enige, faelles };
   });
 
   const topParties = Object.entries(partyScores)
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => b[1].pct - a[1].pct)
     .slice(0, 5)
-    .map(([navn, score]) => ({ navn, score }));
+    .map(([navn, data]) => ({ navn, ...data }));
 
   return { parties: topParties };
 }
@@ -941,7 +932,7 @@ function showResults() {
   const partyEl = document.getElementById('party-results');
   partyEl.innerHTML = topParties.length === 0
     ? '<p style="color:var(--muted)">Ikke nok data til at beregne partimatch.</p>'
-    : topParties.map((p, i) => renderMatchCard(i + 1, p.navn, p.score)).join('');
+    : topParties.map((p, i) => renderMatchCard(i + 1, p.navn, p.pct, p.enige, p.faelles)).join('');
 
   show('screen-results');
 
@@ -952,13 +943,13 @@ function showResults() {
   }, 100);
 }
 
-function renderMatchCard(rank, name, score) {
-  const pct = Math.max(0, Math.round(((score + 1) / 2) * 100));
+function renderMatchCard(rank, name, pct, enige, faelles) {
   return `
     <div class="match-card">
       <div class="match-rank ${rank === 1 ? 'top' : ''}">${rank}</div>
       <div class="match-info">
         <div class="match-name">${name || '–'}</div>
+        <div class="match-party" style="font-size:0.78rem;color:#999">${enige} af ${faelles} ens</div>
       </div>
       <div class="match-score-wrap">
         <div class="match-score">${pct}%</div>
@@ -977,7 +968,7 @@ function restart() {
 // UTILS
 // ══════════════════════════════════════════════
 function show(id) {
-  ['screen-loading', 'screen-error', 'screen-intro', 'screen-quiz', 'screen-results']
+  ['screen-loading', 'screen-intro', 'screen-quiz', 'screen-results']
     .forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
 }
 
