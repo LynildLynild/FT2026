@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Folketingsvalgtesten</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #C0392B;
+    --red-dark: #922B21;
+    --blue: #1A3A5C;
+    --blue-light: #2471A3;
+    --cream: #F5F0E8;
+    --ink: #1a1a1a;
+    --muted: #7a7a7a;
+    --card-bg: #ffffff;
+    --shadow: 0 8px 40px rgba(0,0,0,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  /* Background pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,0,0,0.04) 39px, rgba(0,0,0,0.04) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,0,0,0.04) 39px, rgba(0,0,0,0.04) 40px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #app { position: relative; z-index: 1; }
+
+  /* ── INTRO ── */
+  #screen-intro {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .logo-mark {
+    width: 72px; height: 72px;
+    background: var(--red);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 4px 20px rgba(192,57,43,0.4);
+  }
+  .logo-mark svg { width: 36px; height: 36px; fill: white; }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900;
+    line-height: 1.1;
+    color: var(--blue);
+    margin-bottom: 0.5rem;
+  }
+
+  .intro-sub {
+    font-size: 1.05rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    max-width: 480px;
+    line-height: 1.6;
+  }
+
+  .intro-meta {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2.5rem;
+  }
+
+  .meta-pill {
+    background: white;
+    border: 1.5px solid rgba(0,0,0,0.1);
+    border-radius: 999px;
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .btn-primary {
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 1rem 2.5rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 16px rgba(192,57,43,0.3);
+  }
+  .btn-primary:hover {
+    background: var(--red-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(192,57,43,0.4);
+  }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* ── QUIZ ── */
+  #screen-quiz {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .quiz-header {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+
+  .quiz-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--blue);
+  }
+
+  .progress-wrap {
+    flex: 1;
+    margin: 0 1.5rem;
+  }
+
+  .progress-bar {
+    height: 4px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--red);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  /* Card stack */
+  .card-stack {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    height: 480px;
+  }
+
+  .ghost-card {
+    position: absolute;
+    inset: 0;
+    background: white;
+    border-radius: 16px;
+    transform-origin: bottom center;
+  }
+  .ghost-card-2 { transform: scale(0.94) translateY(-16px); opacity: 0.5; z-index: 1; }
+  .ghost-card-1 { transform: scale(0.97) translateY(-8px); opacity: 0.75; z-index: 2; }
+
+  .vote-card {
+    position: absolute;
+    inset: 0;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    z-index: 3;
+    cursor: grab;
+    transition: box-shadow 0.2s;
+    will-change: transform;
+    user-select: none;
+  }
+
+  .vote-card.is-dragging {
+    cursor: grabbing;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+
+  .card-category {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+
+  .card-date {
+    font-size: 0.72rem;
+    color: var(--muted);
+    float: right;
+  }
+
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--blue);
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+  }
+
+  .card-desc {
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: #444;
+  }
+
+  .card-details {
+    margin-top: 0.5rem;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .card-details summary {
+    font-size: 0.78rem;
+    color: #888;
+    cursor: pointer;
+    user-select: none;
+    padding: 0.2rem 0;
+  }
+
+  .card-details summary:hover {
+    color: #555;
+  }
+
+  .card-full-desc {
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: #666;
+    margin-top: 0.4rem;
+    mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+    max-height: 8rem;
+    overflow-y: auto;
+  }
+
+  .card-result {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0,0,0,0.07);
+    font-size: 0.8rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .result-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .result-dot.passed { background: #27AE60; }
+  .result-dot.failed { background: var(--red); }
+
+  /* Swipe overlays */
+  .swipe-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.1s;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .swipe-overlay.ja {
+    background: linear-gradient(135deg, rgba(39,174,96,0.92), rgba(30,130,70,0.92));
+  }
+
+  .swipe-overlay.nej {
+    background: linear-gradient(135deg, rgba(192,57,43,0.92), rgba(146,43,33,0.92));
+  }
+
+  .swipe-overlay.ved-ikke {
+    background: linear-gradient(135deg, rgba(100,100,100,0.88), rgba(60,60,60,0.88));
+  }
+
+  .overlay-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: white;
+    letter-spacing: 0.05em;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  /* Action buttons */
+  .action-buttons {
+    display: flex;
+    gap: 1.25rem;
+    margin-top: 2rem;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    background: white;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 0.9rem 1.4rem;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    color: var(--ink);
+    min-width: 80px;
+  }
+
+  .action-btn svg {
+    width: 22px; height: 22px;
+  }
+
+  .action-btn.nej-btn:hover {
+    border-color: var(--red);
+    color: var(--red);
+    transform: scale(1.05);
+  }
+  .action-btn.ja-btn:hover {
+    border-color: #27AE60;
+    color: #27AE60;
+    transform: scale(1.05);
+  }
+  .action-btn.ved-ikke-btn:hover {
+    border-color: #888;
+    color: #888;
+    transform: scale(1.05);
+  }
+  .action-btn:active { transform: scale(0.97); }
+
+  /* ── RESULTS ── */
+  #screen-results {
+    min-height: 100vh;
+    padding: 3rem 1.5rem 4rem;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .results-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .results-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 900;
+    color: var(--blue);
+    margin-bottom: 0.5rem;
+  }
+
+  .results-header p {
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  .results-section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--blue);
+    margin: 2rem 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--red);
+    display: inline-block;
+  }
+
+  .match-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.1rem 1.4rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .match-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+
+  .match-rank {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: rgba(0,0,0,0.12);
+    width: 2rem;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .match-rank.top { color: var(--red); }
+
+  .match-info { flex: 1; min-width: 0; }
+
+  .match-name {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .match-party {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .match-score-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .match-score {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--blue);
+  }
+
+  .match-bar-bg {
+    width: 80px;
+    height: 4px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .match-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--red);
+    transition: width 1s ease;
+  }
+
+  .restart-wrap {
+    text-align: center;
+    margin-top: 3rem;
+  }
+
+  /* Loading */
+  #screen-loading {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+
+  .spinner {
+    width: 48px; height: 48px;
+    border: 3px solid rgba(192,57,43,0.2);
+    border-top-color: var(--red);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    color: var(--blue);
+  }
+
+  /* Error */
+  #screen-error {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+    gap: 1rem;
+  }
+  #screen-error h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--blue);
+  }
+  #screen-error p {
+    color: var(--muted);
+    max-width: 420px;
+    line-height: 1.6;
+  }
+  code {
+    background: rgba(0,0,0,0.06);
+    padding: 0.2em 0.5em;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  /* Utility */
+  .hidden { display: none !important; }
+
+  @media (max-width: 480px) {
+    .card-stack { height: 430px; }
+    .vote-card { padding: 1.4rem; }
+    .card-title { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- LOADING -->
+  <div id="screen-loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Henter afstemninger…</div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="screen-error" class="hidden">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+    </div>
+    <h2>Data mangler</h2>
+    <p>Kunne ikke finde <code>votes.json</code> og <code>parties.json</code>.<br><br>
+    Kør <code>python3 fetch_ft_data.py</code> først, og placér JSON-filerne i samme mappe som <code>index.html</code>.<br><br>
+    Åbn derefter siden via en lokal server:<br><code>python3 -m http.server 8000</code></p>
+  </div>
+
+  <!-- INTRO -->
+  <div id="screen-intro" class="hidden">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <h1>Folketing&shy;valgtesten</h1>
+    <p class="intro-sub">Stem ja eller nej til rigtige lovforslag fra Folketinget — og find ud af, hvilke politikere og partier du er mest enig med.</p>
+    <div class="intro-meta">
+      <span class="meta-pill" id="intro-count">— lovforslag</span>
+      <span class="meta-pill">Seneste 3 år</span>
+      <span class="meta-pill">Ca. 5 minutter</span>
+    </div>
+    <button class="btn-primary" onclick="startQuiz()">Start testen →</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="screen-quiz" class="hidden">
+    <div class="quiz-header">
+      <div class="quiz-logo">FT Valgtest</div>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-label" id="progress-label"></div>
+      </div>
+    </div>
+
+    <div class="card-stack">
+      <div class="ghost-card ghost-card-2"></div>
+      <div class="ghost-card ghost-card-1"></div>
+
+      <div class="vote-card" id="vote-card">
+        <div class="swipe-overlay ja" id="overlay-ja"><span class="overlay-label">JA</span></div>
+        <div class="swipe-overlay nej" id="overlay-nej"><span class="overlay-label">NEJ</span></div>
+        <div class="swipe-overlay ved-ikke" id="overlay-ved-ikke"><span class="overlay-label">VED IKKE</span></div>
+
+        <div>
+          <span class="card-category" id="card-category"></span>
+          <span class="card-date" id="card-date"></span>
+        </div>
+        <div class="card-title" id="card-title"></div>
+        <div class="card-desc" id="card-desc"></div>
+        <details class="card-details">
+          <summary>Læs mere</summary>
+          <div class="card-full-desc" id="card-full-desc"></div>
+        </details>
+        <div class="card-result">
+          <div class="result-dot" id="result-dot"></div>
+          <span id="result-text"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="action-btn nej-btn" onclick="vote('nej')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Nej
+      </button>
+      <button class="action-btn ved-ikke-btn" onclick="vote('ved-ikke')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Ved ikke
+      </button>
+      <button class="action-btn ja-btn" onclick="vote('ja')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Ja
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="screen-results" class="hidden">
+    <div class="results-header">
+      <h2>Din politiske profil</h2>
+      <p>Baseret på dine svar på <span id="results-count"></span> lovforslag</p>
+    </div>
+
+    <div class="results-section-title">Partier</div>
+    <div id="party-results"></div>
+
+    <div class="restart-wrap">
+      <button class="btn-primary" onclick="restart()">Tag testen igen</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let allVotes = [];
+let parties = {};
+let quizVotes = [];      // De udvalgte lovforslag
+let userAnswers = {};    // {voteId: 'ja'|'nej'|'ved-ikke'}
+let currentIndex = 0;
+const QUIZ_SIZE = 45;
+
+// ══════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════
+async function boot() {
+  try {
+    const [votesResp, partiesResp] = await Promise.all([
+      fetch('votes.json'),
+      fetch('parties.json')
+    ]);
+
+    if (!votesResp.ok || !partiesResp.ok) throw new Error('Files missing');
+
+    allVotes = await votesResp.json();
+    const partiesArr = await partiesResp.json();
+
+    partiesArr.forEach(p => parties[p.navn] = p);
+
+    document.getElementById('intro-count').textContent =
+      `${Math.min(QUIZ_SIZE, allVotes.length)} lovforslag`;
+
+    show('screen-intro');
+  } catch (e) {
+    show('screen-error');
+  }
+}
+
+// ══════════════════════════════════════════════
+// QUIZ FLOW
+// ══════════════════════════════════════════════
+function startQuiz() {
+  // Stratified sample: fordel på tværs af kategorier og år
+  quizVotes = stratifiedSample(allVotes, QUIZ_SIZE);
+  userAnswers = {};
+  currentIndex = 0;
+  show('screen-quiz');
+  renderCard();
+  initDrag();
+}
+
+function stratifiedSample(votes, n) {
+  // Gruppér på år
+  const byYear = {};
+  votes.forEach(v => {
+    const year = (v.dato || '').slice(0, 4);
+    if (!byYear[year]) byYear[year] = [];
+    byYear[year].push(v);
+  });
+
+  const years = Object.keys(byYear).sort();
+  const perYear = Math.ceil(n / years.length);
+  const result = [];
+
+  years.forEach(year => {
+    const pool = shuffle([...byYear[year]]);
+    result.push(...pool.slice(0, perYear));
+  });
+
+  return shuffle(result).slice(0, n);
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function renderCard() {
+  if (currentIndex >= quizVotes.length) {
+    showResults();
+    return;
+  }
+
+  const v = quizVotes[currentIndex];
+  const pct = Math.round((currentIndex / quizVotes.length) * 100);
+
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent =
+    `${currentIndex + 1} / ${quizVotes.length}`;
+
+  document.getElementById('card-category').textContent = v.kategori || 'Lovforslag';
+  document.getElementById('card-date').textContent = formatDate(v.dato);
+  document.getElementById('card-title').textContent = v.titelKort || v.titel || '';
+  document.getElementById('card-desc').textContent = v.resume_kort || v.beskrivelse || '(Ingen beskrivelse tilgængelig)';
+  const fullDesc = document.getElementById('card-full-desc');
+  if (v.beskrivelse) {
+    fullDesc.textContent = v.beskrivelse;
+    fullDesc.closest('details').style.display = '';
+  } else {
+    fullDesc.closest('details').style.display = 'none';
+  }
+
+  const dot = document.getElementById('result-dot');
+  const txt = document.getElementById('result-text');
+  if (v.resultat === true) {
+    dot.className = 'result-dot passed';
+    txt.textContent = 'Vedtaget';
+  } else if (v.resultat === false) {
+    dot.className = 'result-dot failed';
+    txt.textContent = 'Forkastet';
+  } else {
+    dot.className = 'result-dot';
+    txt.textContent = '';
+  }
+
+  // Reset card position
+  const card = document.getElementById('vote-card');
+  card.style.transition = 'none';
+  card.style.transform = 'none';
+  card.style.opacity = '1';
+  resetOverlays();
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function vote(answer) {
+  const v = quizVotes[currentIndex];
+  userAnswers[v.id] = answer;
+
+  const card = document.getElementById('vote-card');
+  let x = 0, rot = 0;
+
+  if (answer === 'ja') { x = 500; rot = 15; }
+  else if (answer === 'nej') { x = -500; rot = -15; }
+  // ved-ikke: fly up
+  const ty = answer === 'ved-ikke' ? -400 : 0;
+
+  // Show overlay briefly
+  showOverlay(answer);
+
+  card.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+  card.style.transform = `translateX(${x}px) translateY(${ty}px) rotate(${rot}deg)`;
+  card.style.opacity = '0';
+
+  setTimeout(() => {
+    currentIndex++;
+    renderCard();
+  }, 420);
+}
+
+function showOverlay(answer) {
+  resetOverlays();
+  const map = { ja: 'overlay-ja', nej: 'overlay-nej', 'ved-ikke': 'overlay-ved-ikke' };
+  const el = document.getElementById(map[answer]);
+  if (el) el.style.opacity = '1';
+}
+
+function resetOverlays() {
+  ['overlay-ja', 'overlay-nej', 'overlay-ved-ikke'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.opacity = '0';
+  });
+}
+
+// ══════════════════════════════════════════════
+// DRAG / SWIPE
+// ══════════════════════════════════════════════
+function initDrag() {
+  const card = document.getElementById('vote-card');
+  let startX, startY, isDragging = false;
+
+  function onStart(e) {
+    if (e.target.closest('button')) return;
+    isDragging = true;
+    const pt = e.touches ? e.touches[0] : e;
+    startX = pt.clientX;
+    startY = pt.clientY;
+    card.classList.add('is-dragging');
+    card.style.transition = 'none';
+  }
+
+  function onMove(e) {
+    if (!isDragging) return;
+    const pt = e.touches ? e.touches[0] : e;
+    const dx = pt.clientX - startX;
+    const dy = pt.clientY - startY;
+    const rot = dx * 0.08;
+
+    card.style.transform = `translateX(${dx}px) translateY(${dy}px) rotate(${rot}deg)`;
+
+    // Overlays
+    resetOverlays();
+    if (dx > 60) showOverlay('ja');
+    else if (dx < -60) showOverlay('nej');
+    else if (dy < -80) showOverlay('ved-ikke');
+  }
+
+  function onEnd(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    card.classList.remove('is-dragging');
+
+    const pt = e.changedTouches ? e.changedTouches[0] : e;
+    const dx = pt.clientX - startX;
+    const dy = pt.clientY - startY;
+
+    if (dx > 120) vote('ja');
+    else if (dx < -120) vote('nej');
+    else if (dy < -120) vote('ved-ikke');
+    else {
+      // Snap back
+      card.style.transition = 'transform 0.3s spring(1,0.7,0,0)';
+      card.style.transform = 'none';
+      resetOverlays();
+    }
+  }
+
+  card.addEventListener('mousedown', onStart);
+  card.addEventListener('touchstart', onStart, { passive: true });
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('touchmove', onMove, { passive: true });
+  document.addEventListener('mouseup', onEnd);
+  document.addEventListener('touchend', onEnd);
+}
+
+// ══════════════════════════════════════════════
+// MATCHING ALGORITHM
+// ══════════════════════════════════════════════
+function stemmeToNum(stemme) {
+  if (stemme === 'Ja') return 1;
+  if (stemme === 'Nej') return -1;
+  return 0; // Hverken / blank
+}
+
+function answerToNum(answer) {
+  if (answer === 'ja') return 1;
+  if (answer === 'nej') return -1;
+  return 0;
+}
+
+function cosineSimilarity(vecA, vecB) {
+  let dot = 0, magA = 0, magB = 0;
+  for (let i = 0; i < vecA.length; i++) {
+    dot += vecA[i] * vecB[i];
+    magA += vecA[i] * vecA[i];
+    magB += vecB[i] * vecB[i];
+  }
+  if (magA === 0 || magB === 0) return 0;
+  return dot / (Math.sqrt(magA) * Math.sqrt(magB));
+}
+
+function computeMatches() {
+  const answeredVotes = quizVotes.filter(v => userAnswers[v.id] !== 'ved-ikke' && userAnswers[v.id] !== undefined);
+
+  if (answeredVotes.length === 0) return { parties: [] };
+
+  const userVec = answeredVotes.map(v => answerToNum(userAnswers[v.id]));
+
+  // Parti-matching via partiStemmer (nøgle = partinavn)
+  const partyNames = new Set();
+  answeredVotes.forEach(v => Object.keys(v.partiStemmer || {}).forEach(n => partyNames.add(n)));
+
+  const partyScores = {};
+  partyNames.forEach(navn => {
+    const vec = answeredVotes.map(v => {
+      const stemme = v.partiStemmer?.[navn];
+      return stemme ? stemmeToNum(stemme) : 0;
+    });
+    const coverage = vec.filter(x => x !== 0).length;
+    if (coverage < 3) return;
+    partyScores[navn] = cosineSimilarity(userVec, vec);
+  });
+
+  const topParties = Object.entries(partyScores)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([navn, score]) => ({ navn, score }));
+
+  return { parties: topParties };
+}
+
+function showResults() {
+  const { parties: topParties } = computeMatches();
+  const answered = Object.keys(userAnswers).length;
+
+  document.getElementById('results-count').textContent = answered;
+
+  const partyEl = document.getElementById('party-results');
+  partyEl.innerHTML = topParties.length === 0
+    ? '<p style="color:var(--muted)">Ikke nok data til at beregne partimatch.</p>'
+    : topParties.map((p, i) => renderMatchCard(i + 1, p.navn, p.score)).join('');
+
+  show('screen-results');
+
+  setTimeout(() => {
+    document.querySelectorAll('.match-bar-fill').forEach(el => {
+      el.style.width = el.dataset.width;
+    });
+  }, 100);
+}
+
+function renderMatchCard(rank, name, score) {
+  const pct = Math.max(0, Math.round(((score + 1) / 2) * 100));
+  return `
+    <div class="match-card">
+      <div class="match-rank ${rank === 1 ? 'top' : ''}">${rank}</div>
+      <div class="match-info">
+        <div class="match-name">${name || '–'}</div>
+      </div>
+      <div class="match-score-wrap">
+        <div class="match-score">${pct}%</div>
+        <div class="match-bar-bg">
+          <div class="match-bar-fill" style="width:0" data-width="${pct}%"></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function restart() {
+  show('screen-intro');
+}
+
+// ══════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════
+function show(id) {
+  ['screen-loading', 'screen-error', 'screen-intro', 'screen-quiz', 'screen-results']
+    .forEach(s => document.getElementById(s).classList.toggle('hidden', s !== id));
+}
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+boot();
+</script>
+</body>
+</html>
