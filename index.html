@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Folketingsvalgtesten</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -641,7 +642,7 @@
     <p class="intro-sub">Stem ja eller nej til rigtige lovforslag fra Folketinget - og find ud af, hvilke partier du er mest enig med.</p>
     <p class="intro-disclaimer">Denne test bygger på faktiske afstemninger i Folketinget, ikke partiernes udmeldinger. For hvert lovforslag du tager stilling til, sammenligner vi dit svar med hvad partierne rent faktisk stemte i Folketinget. Til sidst ser du, hvilke partier du oftest er enig med. Disclaimer: Dette er et uafhængigt hyggeprojekt uden tilknytning til Folketinget, politiske partier eller andre myndigheder. Resultatet er vejledende og bør tages med et gran salt.</p>
     <div class="intro-meta">
-      <span class="meta-pill">Lovforslag fra de seneste 3 år</span>
+      <span class="meta-pill">Seneste 3 år</span>
     </div>
     <div class="length-picker">
       <p class="length-label">Hvor lang tid har du?</p>
@@ -652,11 +653,11 @@
         </button>
         <button class="length-btn" onclick="startQuiz(30)">
           <span class="length-title">Mellem</span>
-          <span class="length-sub">30 spørgsmål · ~5 min</span>
+          <span class="length-sub">30 spørgsmål · ~6 min</span>
         </button>
         <button class="length-btn" onclick="startQuiz(50)">
           <span class="length-title">Lang</span>
-          <span class="length-sub">50 spørgsmål · ~8 min</span>
+          <span class="length-sub">50 spørgsmål · ~10 min</span>
         </button>
       </div>
     </div>
@@ -732,10 +733,10 @@
       <summary>Om testen</summary>
       <div class="about-content">
         <h3>Hvad måler testen?</h3>
-        <p>Testen sammenligner dine svar med, hvad partierne rent faktisk har stemt i Folketinget. Det betyder at du måler partiernes <em>handlinger</em>, ikke deres kommunikation.</p>
+        <p>Testen sammenligner dine svar med, hvad partierne rent faktisk har stemt i Folketinget — ikke hvad de siger, de mener. Det betyder at du måler partiernes <em>handlinger</em>, ikke deres kommunikation.</p>
 
         <h3>Hvilke data bygger den på?</h3>
-        <p>Afstemninger fra Folketinget siden 2023, hentet fra Folketingets åbne OData API. Kun endelige vedtagelser af lovforslag og beslutningsforslag er medtaget. Afstemninger hvor færre end 2 partier stemte imod, er sorteret fra; de illustrerer konsensus, ikke politiske skillelinjer.</p>
+        <p>Afstemninger fra Folketinget siden 2023, hentet fra Folketingets åbne OData API. Kun endelige vedtagelser af lovforslag og beslutningsforslag er medtaget. Afstemninger hvor færre end 2 partier stemte imod, er sorteret fra — de illustrerer konsensus, ikke politiske skillelinjer.</p>
 
         <h3>Sådan regnes resultatet</h3>
         <p>For hver afstemning du svarede ja eller nej til, tjekkes det, om partiet stemte det samme. Svarer du "ved ikke", tæller afstemningen ikke med. Resultatet er andelen af fælles afstemninger, hvor du og partiet var enige. 78% betyder at I stemte ens i 78% af de afstemninger, I begge tog stilling til.</p>
