@@ -80,6 +80,52 @@
     line-height: 1.6;
   }
 
+  .length-picker {
+    width: 100%;
+    max-width: 480px;
+    margin-top: 0.5rem;
+  }
+  .length-label {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+    text-align: center;
+  }
+  .length-options {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+  }
+  .length-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    background: white;
+    border: 2px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 1rem 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .length-btn:hover {
+    border-color: var(--blue);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  }
+  .length-btn:focus { outline: none; }
+  .length-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .length-sub {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
   .intro-disclaimer {
     font-size: 0.82rem;
     color: #aaa;
@@ -380,6 +426,11 @@
     transform: scale(1.05);
   }
   .action-btn:active { transform: scale(0.97); }
+  .action-btn:focus { outline: none; }
+  /* iOS holder :hover/:focus state — reset eksplicit */
+  @media (hover: none) {
+    .action-btn:hover { border-color: transparent; color: var(--ink); transform: none; }
+  }
 
   /* ── RESULTS ── */
   #screen-results {
@@ -493,6 +544,35 @@
     transition: width 1s ease;
   }
 
+  .about-section {
+    margin-top: 2.5rem;
+    border-top: 1px solid #eee;
+    padding-top: 1.5rem;
+  }
+  .about-section > summary {
+    font-size: 0.85rem;
+    color: #aaa;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+    text-align: center;
+    padding: 0.5rem;
+  }
+  .about-section > summary:hover { color: #777; }
+  .about-section[open] > summary { margin-bottom: 1.5rem; }
+  .about-content h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--blue);
+    margin: 1.5rem 0 0.4rem;
+  }
+  .about-content h3:first-child { margin-top: 0; }
+  .about-content p {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
   .restart-wrap {
     text-align: center;
     margin-top: 3rem;
@@ -557,15 +637,29 @@
     <div class="logo-mark">
       <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
     </div>
-    <h1>Valgtest til Folketinget (2026)</h1>
-    <p class="intro-sub">Stem ja eller nej til rigtige lovforslag fra Folketinget, og find ud af, hvilke partier du er mest enig med.</p>
-    <p class="intro-disclaimer">Denne test bygger på faktiske afstemninger i Folketinget. Ikke partiernes egne udmeldinger. Det betyder, at testen måler dine svar op mod hvad partierne rent faktisk har stemt for at gøre til lov. Afstemninger, hvor alle eller næsten alle partier var enige om et 'Ja', er sorteret fra, da de i mindre grad illustrerer de politiske skillelinjer.</p>
+    <h1>Valgtest til Folketingsvalg</h1>
+    <p class="intro-sub">Stem ja eller nej til rigtige lovforslag fra Folketinget - og find ud af, hvilke partier du er mest enig med.</p>
+    <p class="intro-disclaimer">Denne test bygger på faktiske afstemninger i Folketinget. Det betyder, at testen måler dine svar op mod hvad partierne rent faktisk har stemt for at gøre til lov.</p>
     <div class="intro-meta">
-      <span class="meta-pill" id="intro-count">— lovforslag</span>
       <span class="meta-pill">Seneste 3 år</span>
-      <span class="meta-pill">Ca. 5 minutter</span>
     </div>
-    <button class="btn-primary" onclick="startQuiz()">Start testen →</button>
+    <div class="length-picker">
+      <p class="length-label">Hvor lang tid har du?</p>
+      <div class="length-options">
+        <button class="length-btn" onclick="startQuiz(15)">
+          <span class="length-title">Kort</span>
+          <span class="length-sub">15 spørgsmål · ~3 min</span>
+        </button>
+        <button class="length-btn" onclick="startQuiz(30)">
+          <span class="length-title">Mellem</span>
+          <span class="length-sub">30 spørgsmål · ~5 min</span>
+        </button>
+        <button class="length-btn" onclick="startQuiz(50)">
+          <span class="length-title">Lang</span>
+          <span class="length-sub">50 spørgsmål · ~8 min</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- QUIZ -->
@@ -633,6 +727,23 @@
     <div class="restart-wrap">
       <button class="btn-primary" onclick="restart()">Tag testen igen</button>
     </div>
+
+    <details class="about-section">
+      <summary>Om testen</summary>
+      <div class="about-content">
+        <h3>Hvad måler testen?</h3>
+        <p>Testen sammenligner dine svar med, hvad partierne rent faktisk har stemt i Folketinget. Det betyder at du måler partiernes <em>handlinger</em>, ikke deres kommunikation.</p>
+
+        <h3>Hvilke data bygger den på?</h3>
+        <p>Afstemninger fra Folketinget siden 2023, hentet fra Folketingets åbne OData API. Kun endelige vedtagelser af lovforslag og beslutningsforslag er medtaget. Afstemninger hvor færre end 2 partier stemte imod, er sorteret fra; de illustrerer konsensus, ikke politiske skillelinjer.</p>
+
+        <h3>Sådan regnes resultatet</h3>
+        <p>For hver afstemning du svarede ja eller nej til, tjekkes det, om partiet stemte det samme. Svarer du "ved ikke", tæller afstemningen ikke med. Resultatet er andelen af fælles afstemninger, hvor du og partiet var enige. 78% betyder at I stemte ens i 78% af de afstemninger, I begge tog stilling til.</p>
+
+        <h3>Begrænsninger</h3>
+        <p>Parlamentariske afstemninger afspejler ikke nødvendigvis et partis fulde holdning. Koalitionshensyn og kompromisser betyder at partier ind imellem stemmer anderledes end deres principprogram tilsiger. Partier der ofte indgår brede forlig kan fremstå mere moderate end de er, fordi konsensusbeslutninger er filtreret fra. Testen måler adfærd, ikke intentioner.</p>
+      </div>
+    </details>
   </div>
 
 </div>
@@ -665,9 +776,6 @@ async function boot() {
 
     partiesArr.forEach(p => parties[p.navn] = p);
 
-    document.getElementById('intro-count').textContent =
-      `${Math.min(QUIZ_SIZE, allVotes.length)} lovforslag`;
-
     show('screen-intro');
   } catch (e) {
     console.error('Kunne ikke hente data:', e);
@@ -678,9 +786,10 @@ async function boot() {
 // ══════════════════════════════════════════════
 // QUIZ FLOW
 // ══════════════════════════════════════════════
-function startQuiz() {
+function startQuiz(n) {
+  const size = n || QUIZ_SIZE;
   // Stratified sample: fordel på tværs af kategorier og år
-  quizVotes = stratifiedSample(allVotes, QUIZ_SIZE);
+  quizVotes = stratifiedSample(allVotes, size);
   userAnswers = {};
   currentIndex = 0;
   show('screen-quiz');
@@ -770,6 +879,8 @@ function formatDate(iso) {
 }
 
 function vote(answer) {
+  // Blur aktiv knap så iOS ikke holder :focus/:active state
+  if (document.activeElement) document.activeElement.blur();
   const v = quizVotes[currentIndex];
   userAnswers[v.id] = answer;
 
@@ -917,7 +1028,6 @@ function computeMatches() {
 
   const topParties = Object.entries(partyScores)
     .sort((a, b) => b[1].pct - a[1].pct)
-    .slice(0, 5)
     .map(([navn, data]) => ({ navn, ...data }));
 
   return { parties: topParties };
