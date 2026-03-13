@@ -743,6 +743,8 @@
 
         <h3>Begrænsninger</h3>
         <p>Parlamentariske afstemninger afspejler ikke nødvendigvis et partis fulde holdning. Koalitionshensyn og kompromisser betyder at partier ind imellem stemmer anderledes end deres principprogram tilsiger. Partier der ofte indgår brede forlig kan fremstå mere moderate end de er, fordi konsensusbeslutninger er filtreret fra. Testen måler adfærd, ikke intentioner.</p>
+        <h3>Udeladte partier</h3>
+        <p>Borgernes Parti, Naleraq, Nye Borgerlige, Sambandsflokkurin og Uden for gruppe indgår ikke i resultatet, da de enten er ophørte eller ikke er reelle valgmuligheder ved dette folketingsvalg.</p>
       </div>
     </details>
   </div>
@@ -1027,7 +1029,12 @@ function computeMatches() {
     partyScores[navn] = { pct: Math.round((enige / faelles) * 100), enige, faelles };
   });
 
+  const UDELADT = new Set([
+    'Borgernes Parti', 'Naleraq', 'Nye Borgerlige', 'Sambandsflokkurin', 'Uden for gruppe'
+  ]);
+
   const topParties = Object.entries(partyScores)
+    .filter(([navn]) => !UDELADT.has(navn))
     .sort((a, b) => b[1].pct - a[1].pct)
     .map(([navn, data]) => ({ navn, ...data }));
 
